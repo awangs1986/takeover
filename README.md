@@ -4,7 +4,7 @@
 
 ## 中文
 
-`takeover` 是一个在新会话中恢复项目专注力的 skill。旧对话过长、反复讨论导致重点散失，或因额度耗尽、报错而无法继续时，新会话可以从现有记录重建一份精简工作上下文，回顾关键历史，继续未完成的任务。
+`takeover` 是一个不绑定特定代理、模型或平台的通用 skill，用于在新会话中恢复项目专注力。旧对话过长、反复讨论导致重点散失，或因额度耗尽、报错而无法继续时，新会话可以从现有记录重建一份精简工作上下文，回顾关键历史，继续未完成的任务。
 
 handoff 由旧会话主动整理并交出上下文；takeover 由新会话读取历史、自己完成这次交接。两者都希望用更精简的上下文继续工作，takeover 无需旧对话再回复或预先生成交接文档。仓库名为 `talkeover`，安装和调用的 skill 名为 `takeover`。
 
@@ -32,27 +32,32 @@ handoff 由旧会话主动整理并交出上下文；takeover 由新会话读取
 
 ### 安装
 
-克隆仓库后，把 skill 放到 Codex 的 skills 目录：
+核心是全英文的 [`takeover/SKILL.md`](takeover/SKILL.md)，不依赖特定工具 API 或插件。先获取仓库：
 
 ```bash
 git clone https://github.com/awangs1986/talkeover.git
 cd talkeover
-mkdir -p ~/.codex/skills
-ln -s "$(pwd)/takeover" ~/.codex/skills/takeover
 ```
 
-请在仓库根目录执行最后一行。若不想使用符号链接，也可以复制 `takeover/` 目录到 `~/.codex/skills/takeover/`。重启或新建 Codex 会话后即可使用。
+支持 skills 的代理：将 `takeover/` 目录复制或链接到该代理配置的技能目录，并按其机制加载。默认目录示例：Codex 为 `~/.codex/skills/takeover/`，Pi 为 `~/.pi/agent/skills/takeover/`；自定义配置和其他代理以实际设置为准。
+
+不支持 skills 的代理：将 `SKILL.md` 作为任务说明提供，并附上可读取的源对话导出。没有本地文件或会话查询能力时，可以使用当前应用支持的附件或文本输入；仅提供另一个应用的对话 ID 不代表当前应用就能读取它。
+
+`agents/openai.yaml` 仅是可选的 Codex 界面和调用策略适配，其他代理无需加载；完整工作流程都在 `SKILL.md` 中。不同代理的安装、加载和工具权限仍由各自环境决定。
 
 ### 使用方式
 
+加载 skill 后，用当前代理的调用方式，或直接说明：
+
 ```text
-$takeover 原对话 ID，在当前项目继续剩下的工作
-$takeover 原对话 ID，旧对话额度用完了；简短回顾历史，重新聚焦当前任务并继续
-$takeover /path/to/session.jsonl，把旧项目 /old/repo 映射到当前目录
-$takeover /path/to/export.json，只接手其中的登录功能；先核对当前实现
-$takeover https://example.com/session.json，先恢复上下文，暂不修改代码
+使用 takeover 接手原对话 ID，确认理解后在当前项目继续剩下的工作
+使用 takeover 读取附上的对话导出；旧对话额度用完了，先简短回顾历史并恢复当前任务
+使用 takeover 读取 /path/to/session.jsonl，把旧项目 /old/repo 映射到当前目录
+使用 takeover 读取 /path/to/export.json，只接手其中的登录功能；先核对当前实现
+使用 takeover 读取 https://example.com/session.json，先恢复上下文，暂不修改代码
 ```
 
+支持 `$takeover` 的宿主可以使用该快捷方式；它不是通用流程的必要语法。项目描述最多 10 句，能少则少，简单项目一两句即可；确认和澄清问题也只在必要时提出。
 ### 示例：旧对话额度耗尽，任务还没完成
 
 以下为虚构的使用示例，不是实际测试结果。旧对话 A 要修复支付回调重复扣款：最初讨论了 Redis 去重，后来用户要求不引入新服务，改为数据库唯一约束。历史记录显示已加约束、单次回调测试通过，但并发测试发出后未返回结果，随后额度耗尽。没有生成 handoff 文档。
@@ -60,7 +65,7 @@ $takeover https://example.com/session.json，先恢复上下文，暂不修改�
 已有导出 `/archive/payment-fix.jsonl`，其中的项目目录是 `/Users/alice/work/shop`。在 `/home/me/projects/shop` 打开新对话 B：
 
 ```text
-$takeover /archive/payment-fix.jsonl，旧对话额度用完了。把 /Users/alice/work/shop 映射到当前目录，简短回顾历史后继续修复支付回调。
+使用 takeover 读取 /archive/payment-fix.jsonl，旧对话额度用完了。把 /Users/alice/work/shop 映射到当前目录，简短回顾历史并确认理解后继续修复支付回调。
 ```
 
 代理先整理已有信息，只需一次整体确认（实际内容必须以读取记录和核实项目的结果为准）：
@@ -77,11 +82,11 @@ $takeover /archive/payment-fix.jsonl，旧对话额度用完了。把 /Users/ali
 
 ### 能力边界
 
-这是让代理执行的工作流程，不是独立的会话导入程序。需要可读取的源记录和仍可运行的新会话；只有 ID 而没有记录访问权限无法恢复内容。它不绕过账户额度，也不能清空已经加载的上下文，因此建议在新会话调用，并避免全量复制旧日志。跨模型指不依赖原模型和工具协议，不保证所有模型的理解质量相同。
+这是让代理执行的工作流程，不是独立的会话导入程序。需要可读取的源记录和仍可运行的新会话；只有 ID 而没有记录访问权限无法恢复内容。它不绕过账户额度，也不能清空已经加载的上下文，因此建议在新会话调用，并避免全量复制旧日志。通用指核心流程不绑定平台，不代表已逐一验证所有代理，或能跨应用自动获得数据权限；实际读取、路径验证和执行能力取决于当前环境。跨模型不保证所有模型的理解质量相同。
 
 ## English
 
-`takeover` rebuilds focused working context in a fresh conversation. Use it when a long discussion has lost focus, or when the original conversation cannot continue because of exhausted quota, an error, or an interruption. The new conversation reads existing records, recalls the important history, and resumes unfinished work.
+`takeover` is a general-purpose skill independent of any particular agent, model, or platform. It rebuilds focused working context in a fresh conversation when a long discussion has lost focus or the original conversation cannot continue because of exhausted quota, an error, or an interruption. The new conversation reads existing records, recalls the important history, and resumes unfinished work.
 
 A handoff is prepared by the outgoing conversation; a takeover is reconstructed by the incoming conversation. Both aim to continue with concise context. Takeover requires no further response or handoff document from the old conversation. The repository is named `talkeover`; the installed skill and invocation are named `takeover`.
 
@@ -109,27 +114,32 @@ This workflow is built into takeover and does not require `grill-with-docs` or i
 
 ### Install
 
-Clone the repository, then make the skill available to Codex:
+The complete workflow is in the English [`takeover/SKILL.md`](takeover/SKILL.md), with no required tool API or plugin. First obtain the repository:
 
 ```bash
 git clone https://github.com/awangs1986/talkeover.git
 cd talkeover
-mkdir -p ~/.codex/skills
-ln -s "$(pwd)/takeover" ~/.codex/skills/takeover
 ```
 
-Run the last command from the cloned repository root. You may copy `takeover/` to `~/.codex/skills/takeover/` instead of creating a symlink. Start a new Codex session after installation.
+For agents with skill support, copy or link `takeover/` into the host's configured skills directory and load it using that host's mechanism. Default directory examples are `~/.codex/skills/takeover/` for Codex and `~/.pi/agent/skills/takeover/` for Pi; follow actual settings for custom configurations and other agents.
+
+For agents without a skill loader, provide `SKILL.md` as task instructions together with a readable source export. If local files or conversation lookup are unavailable, use the application's supported attachments or text input. Supplying an ID from another application does not itself grant access to that conversation.
+
+`agents/openai.yaml` is optional Codex UI and invocation-policy metadata; other agents do not need to load it. The complete workflow is in `SKILL.md`. Installation, loading, and tool permissions remain host-specific.
 
 ### Usage
 
+After making the skill available, use the host's invocation mechanism or ordinary instructions:
+
 ```text
-$takeover <source conversation ID>; continue the remaining work in this project
-$takeover <source conversation ID>; the old chat ran out of quota. Briefly recap the history, refocus, and continue
-$takeover /path/to/session.jsonl; map /old/repo to the current directory
-$takeover /path/to/export.json; resume only the login feature and verify the current implementation first
-$takeover https://example.com/session.json; recover context without changing code yet
+Use takeover with conversation ID [source ID]; continue in this project after confirming your understanding
+Use takeover with the attached export; the old chat ran out of quota. Briefly recap the history and recover the current task
+Use takeover with /path/to/session.jsonl; map /old/repo to the current directory
+Use takeover with /path/to/export.json; resume only the login feature and verify the current implementation first
+Use takeover with https://example.com/session.json; recover context without changing code yet
 ```
 
+Hosts supporting `$takeover` may use that shortcut; it is not required syntax. Describe the project in at most 10 sentences, fewer whenever possible; a simple project may need one or two. Ask confirmation and clarification questions only as needed.
 ### Example: quota exhausted before the task was finished
 
 This is a fictional usage example, not a test result. Conversation A was fixing duplicate payment charges. It initially considered Redis, but the user ruled out adding a service, so the approach changed to a database uniqueness constraint. The history claims the constraint was added and a single-request test passed. A concurrent-request test had no recorded result when quota ran out. No handoff was prepared.
@@ -137,7 +147,7 @@ This is a fictional usage example, not a test result. Conversation A was fixing 
 An existing export is at `/archive/payment-fix.jsonl`, with the old project at `/Users/alice/work/shop`. Open conversation B in `/home/me/projects/shop` and say:
 
 ```text
-$takeover /archive/payment-fix.jsonl; the old chat ran out of quota. Map /Users/alice/work/shop to the current directory, briefly recap the history, and continue the payment-callback fix.
+Use takeover with /archive/payment-fix.jsonl; the old chat ran out of quota. Map /Users/alice/work/shop to the current directory, briefly recap the history, confirm your understanding, and continue the payment-callback fix.
 ```
 
 The agent summarizes what is known and requests one overall confirmation; actual claims must follow the records and project checks:
@@ -154,7 +164,7 @@ The old conversation does not need to run again. After confirmation, the new con
 
 ### Limits
 
-This is an agent workflow, not a standalone session importer. It needs readable source records and a working destination conversation; an ID alone cannot recover inaccessible content. It does not bypass account quotas or clear already-loaded context. Invoke it in a fresh conversation and avoid copying the entire old log. Cross-model support means independence from the original model and tool protocol, not identical interpretation quality across models.
+This is an agent workflow, not a standalone session importer. It needs readable source records and a working destination conversation; an ID alone cannot recover inaccessible content. It does not bypass account quotas or clear already-loaded context. Invoke it in a fresh conversation and avoid copying the entire old log. A platform-independent workflow does not mean every agent has been tested or that data access is automatically available across applications; record reading, path verification, and execution depend on the current environment. Cross-model support does not guarantee identical interpretation quality.
 
 ## Repository layout
 
