@@ -1,5 +1,5 @@
 interface:
   display_name: "Takeover"
-  short_description: "Resume tasks from sessions and remap project paths"
+  short_description: "Recover stalled conversations and rebuild focused context"
 policy:
   allow_implicit_invocation: false
