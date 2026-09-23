@@ -15,7 +15,18 @@ handoff 由旧会话主动整理并交出上下文；takeover 由新会话读取
 - 先建立历史索引，按需读取关键片段；工作摘要保持简短，重复日志和旧代码留在源记录中，需要时再回查。
 - 不依赖源会话使用的模型、工具名称或工具调用格式；历史工具记录只作为需要核实的证据。
 - 将旧项目路径核实并映射到当前项目，避免把相同文件名误判为同一文件。
+- 用由大到小的 10 个问题和已整理的答案确认项目画像；有分歧时集中澄清并确认修订 SPEC，再继续实施。
 - 保留当前会话的权限、系统指令与项目规则；不会自动重放历史命令、发布或发送消息。
+
+### 接手后先确认理解
+
+10 个问题依次覆盖：项目方向 → 使用者 → 核心交付 → 本次范围 → 关键约束 → 历史转折 → 当前方案 → 实际进展 → 接续重点 → 验收标准。每题附上代理从记录中整理的简短理解，无依据处标为未确认，用户无需重新描述整个项目。
+
+你可以直接回复“认可”，也可以说“第 4 和第 7 点不对……”并纠正；只回答部分项目不会被当作整体认可。确认前仅进行只读检查和草稿整理，确认后才继续实施。
+
+如有异议，会自动采用 `grill-with-docs` 的思路：围绕原有 10 个主题澄清关键分歧、核对术语并记录决策。明确的纠正直接采纳；有必要时一次只追问一个关键点，不另开长问卷，也不反复问已认可的内容。随后展示修订 SPEC 及变化，等你确认后继续。理解纠错与需求变更会分别记录；已有 SPEC 只调整受影响部分。
+
+这套流程已包含在 takeover 中，无需安装 `grill-with-docs` 或其依赖。没有分歧时，认可画像即可继续，不额外要求一轮 SPEC 确认。
 
 ### 安装
 
@@ -50,19 +61,24 @@ $takeover https://example.com/session.json，先恢复上下文，暂不修改�
 $takeover /archive/payment-fix.jsonl，旧对话额度用完了。把 /Users/alice/work/shop 映射到当前目录，简短回顾历史后继续修复支付回调。
 ```
 
-期望得到的接手摘要如下（实际内容必须以读取记录和核实项目的结果为准）：
+期望看到以下 10 个确认问题（实际内容必须以读取记录和核实项目的结果为准）：
 
-> **当前目标：** 修复重复扣款；不引入新服务；并发重复回调只产生一次扣款。
->
-> **历史回顾：** 最初考虑 Redis → 用户要求避免新服务 → 改用数据库唯一约束 → 记录显示单次测试通过 → 并发测试没有结果，旧对话中断。
->
-> **当前状态：** 源记录声称约束已添加，需核对当前代码及迁移；历史测试通过不代表当前项目已验证。
->
-> **下一步：** 先核对当前项目的迁移和处理逻辑，再验证并发重复请求；无需重新讨论已放弃的 Redis 方案。
->
-> **路径与来源：** 将旧项目根目录映射到当前目录，逐项核实相关文件；保留关键消息位置和未返回的测试记录供回查。
+1. **项目要带来什么价值？** 我的理解：目前可确认的目标是支付可靠性，项目整体定位尚未从记录确认。
+2. **主要服务谁？** 我的理解：涉及支付流程的用户，具体用户群待确认。
+3. **核心交付是什么？** 我的理解：可靠处理重复支付回调。
+4. **本次做到哪里？** 我的理解：先完成支付回调修复，其他支付功能未纳入本次范围。
+5. **必须遵守什么约束？** 我的理解：不引入新的服务。
+6. **为何走到当前方案？** 我的理解：Redis 方案因新增服务被放弃，改为数据库约束，并发测试未返回时对话中断。
+7. **采用什么做法？** 我的理解：以数据库唯一约束为核心，细节需要与当前实现核对。
+8. **现在完成到哪里？** 我的理解：记录声称已加约束、单次测试通过，当前项目仍需验证，并发结果未知。
+9. **先继续哪一步？** 我的理解：核对映射到当前目录的迁移和处理逻辑，再验证并发重复请求。
+10. **怎样算完成？** 我的理解：并发重复回调只产生一次扣款，并有验证结果支持。
 
-旧对话不需要再运行一次。新会话使用当前可用工具推进任务，并在需要时查阅历史证据。
+> 以上 10 点是否准确？可以直接回复认可，或指出不对的编号和你的修正。
+
+如果你回复“第 5 点补充一下，可以新增数据库表，但不能新增服务，其他认可”，这条纠正已足够清楚，无需重新盘问。代理会将该约束写入修订 SPEC、保留其他已确认部分，展示草稿供你确认；确认后继续。未知事实依旧需要核实，整体认可不会把它们变成已知。
+
+旧对话不需要再运行一次。新会话在确认后使用当前工具推进任务，并按需查阅历史证据。
 
 ### 能力边界
 
@@ -81,7 +97,18 @@ A handoff is prepared by the outgoing conversation; a takeover is reconstructed 
 - Builds a history index and retrieves relevant passages as needed. Keeps the working summary small; repetitive logs and superseded code stay in the source records.
 - Works across models and tool protocols. Historical tool records are evidence to verify, never calls to replay.
 - Verifies and maps old project paths to the current project instead of assuming matching filenames are equivalent.
+- Confirms a project portrait through 10 questions from broad direction to execution details; disagreements lead to focused clarification and an approved revised spec before implementation resumes.
 - Keeps the current session's permissions, instructions, and project rules. It does not automatically replay commands, publish, or send messages.
+
+### Confirm understanding before continuing
+
+The 10 questions cover: project purpose → users → core deliverable → current scope → constraints → historical turning points → chosen approach → actual progress → next priority → acceptance criteria. Each comes with the agent's brief understanding from the records. Unknowns are marked; you do not have to describe the project again.
+
+Reply “Agreed” to confirm the portrait, or correct individual numbered items. A partial answer is not blanket approval. Before confirmation, the agent only performs read-only checks and prepares drafts; implementation follows confirmation.
+
+Disagreements automatically trigger the `grill-with-docs` approach: clarify material differences within the same 10 topics, check terminology, and record decisions. Clear corrections are accepted directly. When clarification is needed, ask one essential question at a time without opening another questionnaire or revisiting accepted answers. The agent then presents a revised spec and its changes for your approval before continuing. Misunderstandings and changed requirements are recorded separately; an existing spec is revised only where needed.
+
+This workflow is built into takeover and does not require `grill-with-docs` or its dependencies. When there is no disagreement, confirming the portrait is sufficient; no additional spec approval is introduced.
 
 ### Install
 
@@ -116,19 +143,24 @@ An existing export is at `/archive/payment-fix.jsonl`, with the old project at `
 $takeover /archive/payment-fix.jsonl; the old chat ran out of quota. Map /Users/alice/work/shop to the current directory, briefly recap the history, and continue the payment-callback fix.
 ```
 
-An expected recap would look like this; actual claims must follow the available records and project checks:
+An expected portrait asks these 10 questions; actual claims must follow the records and project checks:
 
-> **Goal:** Prevent duplicate charges without a new service; concurrent duplicate callbacks must produce one charge.
->
-> **History:** Redis considered → user ruled out new services → database uniqueness chosen → single-request test reportedly passed → concurrent test has no result; conversation interrupted.
->
-> **State:** The source claims the constraint was added; check the current code and migration. Historical test success is not current verification.
->
-> **Next step:** Inspect the migration and handler, then verify concurrent duplicates; do not reopen the rejected Redis approach without a new reason.
->
-> **Paths and sources:** Map the old project root to the current directory and verify the relevant files; retain message locations and the unfinished test record for reference.
+1. **What value should the project deliver?** My understanding: payment reliability is established; the overall project purpose is not yet confirmed.
+2. **Who uses it?** My understanding: users of the payment flow; the specific audience is unconfirmed.
+3. **What is the core deliverable?** My understanding: reliable handling of duplicate payment callbacks.
+4. **What is the current scope?** My understanding: finish the callback fix; other payment features are outside this task.
+5. **What constraints apply?** My understanding: do not introduce a new service.
+6. **How did we reach this approach?** My understanding: Redis was rejected because it added a service; database uniqueness was selected; the conversation stopped without a concurrent-test result.
+7. **What approach was chosen?** My understanding: a database uniqueness constraint is central; implementation details need verification.
+8. **What is actually complete?** My understanding: the source claims a constraint and a passing single-request test; the current project remains unverified and concurrency results are unknown.
+9. **What should happen next?** My understanding: inspect the mapped migration and handler, then verify concurrent duplicates.
+10. **What counts as done?** My understanding: concurrent duplicate callbacks produce one charge, supported by verification results.
 
-The old conversation does not need to run again. The new conversation uses currently available tools and consults historical evidence only when needed.
+> Are these 10 points accurate? You can confirm them together or correct specific numbered items.
+
+Suppose you reply, “Clarify point 5: adding a database table is fine, but adding a service is not; I agree with the rest.” That is a clear correction, so no further interview is needed. The agent includes it in a revised spec, preserves the other confirmed points, and presents the draft for approval before continuing. Unknown facts still require checking; approval does not make them known.
+
+The old conversation does not need to run again. After confirmation, the new conversation uses current tools and consults historical evidence only when needed.
 
 ### Limits
 
