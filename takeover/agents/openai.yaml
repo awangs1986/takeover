@@ -1,0 +1,5 @@
+interface:
+  display_name: "Takeover"
+  short_description: "Resume tasks from sessions and remap project paths"
+policy:
+  allow_implicit_invocation: false
