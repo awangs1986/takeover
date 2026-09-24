@@ -1,4 +1,4 @@
-# talkeover
+# takeover
 
 [中文](#中文) | [English](#english)
 
@@ -6,7 +6,7 @@
 
 `takeover` 是一个不绑定特定代理、模型或平台的通用 skill，用于在新会话中恢复项目专注力。旧对话过长、反复讨论导致重点散失，或因额度耗尽、报错而无法继续时，新会话可以从现有记录重建一份精简工作上下文，回顾关键历史，继续未完成的任务。
 
-handoff 由旧会话主动整理并交出上下文；takeover 由新会话读取历史、自己完成这次交接。两者都希望用更精简的上下文继续工作，takeover 无需旧对话再回复或预先生成交接文档。仓库名为 `talkeover`，安装和调用的 skill 名为 `takeover`。
+handoff 由旧会话主动整理并交出上下文；takeover 由新会话读取历史、自己完成这次交接。两者都希望用更精简的上下文继续工作，takeover 无需旧对话再回复或预先生成交接文档。仓库名和 skill 名均为 `takeover`。
 
 ### 能做什么
 
@@ -35,8 +35,8 @@ handoff 由旧会话主动整理并交出上下文；takeover 由新会话读取
 核心是全英文的 [`takeover/SKILL.md`](takeover/SKILL.md)，不依赖特定工具 API 或插件。先获取仓库：
 
 ```bash
-git clone https://github.com/awangs1986/talkeover.git
-cd talkeover
+git clone https://github.com/awangs1986/takeover.git
+cd takeover
 ```
 
 支持 skills 的代理：将 `takeover/` 目录复制或链接到该代理配置的技能目录，并按其机制加载。默认目录示例：Codex 为 `~/.codex/skills/takeover/`，Pi 为 `~/.pi/agent/skills/takeover/`；自定义配置和其他代理以实际设置为准。
@@ -88,7 +88,7 @@ cd talkeover
 
 `takeover` is a general-purpose skill independent of any particular agent, model, or platform. It rebuilds focused working context in a fresh conversation when a long discussion has lost focus or the original conversation cannot continue because of exhausted quota, an error, or an interruption. The new conversation reads existing records, recalls the important history, and resumes unfinished work.
 
-A handoff is prepared by the outgoing conversation; a takeover is reconstructed by the incoming conversation. Both aim to continue with concise context. Takeover requires no further response or handoff document from the old conversation. The repository is named `talkeover`; the installed skill and invocation are named `takeover`.
+A handoff is prepared by the outgoing conversation; a takeover is reconstructed by the incoming conversation. Both aim to continue with concise context. Takeover requires no further response or handoff document from the old conversation. Both the repository and the installed skill are named `takeover`.
 
 ### What it does
 
@@ -117,8 +117,8 @@ This workflow is built into takeover and does not require `grill-with-docs` or i
 The complete workflow is in the English [`takeover/SKILL.md`](takeover/SKILL.md), with no required tool API or plugin. First obtain the repository:
 
 ```bash
-git clone https://github.com/awangs1986/talkeover.git
-cd talkeover
+git clone https://github.com/awangs1986/takeover.git
+cd takeover
 ```
 
 For agents with skill support, copy or link `takeover/` into the host's configured skills directory and load it using that host's mechanism. Default directory examples are `~/.codex/skills/takeover/` for Codex and `~/.pi/agent/skills/takeover/` for Pi; follow actual settings for custom configurations and other agents.
